@@ -14,4 +14,17 @@
   :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                       io.github.cognitect-labs/test-runner
-                      {:git/tag "v0.5.0" :git/sha "48c3c67"}}}}}
+                      {:git/tag "v0.5.0" :git/sha "48c3c67"}}}
+  :repl/nrepl
+  ;;;; Simple nREPL server with no additional libraries, headless
+  {:extra-deps {nrepl/nrepl                {:mvn/version "0.9.0"}}
+   :main-opts  ["-m" "nrepl.cmdline"]}
+
+  :repl/rebl
+  {:extra-deps {nrepl/nrepl                {:mvn/version "0.9.0"}
+                cider/cider-nrepl          {:mvn/version "0.27.4"}
+                com.bhauman/rebel-readline {:mvn/version "0.1.4"}}
+   :main-opts  ["-m" "nrepl.cmdline"
+                "--middleware" "[cider.nrepl/cider-middleware]"
+                "-i"
+                "-f" "rebel-readline.main/-main"]}}}
