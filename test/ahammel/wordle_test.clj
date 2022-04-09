@@ -1,7 +1,8 @@
 (ns ahammel.wordle-test
   (:require [clojure.test :refer [deftest testing is are]]
             [ahammel.wordle :refer [guess-word
-                                    guess-result->wordprint]]))
+                                    guess-result->wordprint
+                                    matches-wordprint?]]))
 
 (deftest guess-word-test
   (testing "guess-word"
@@ -112,3 +113,16 @@
           :wordle/has-at-least {\l 1
                                 \p 1
                                 \o 2}})))
+
+(deftest matches-wordprint?-test
+  (testing "dictionary narrowing"
+    (let [wordprint {:wordle/positions    [[:wordle/is-not #{\l \p \s}]
+                                           [:wordle/is-not #{\o \p \s}]
+                                           [:wordle/is \o]
+                                           [:wordle/is-not #{\p \s}]
+                                           [:wordle/is-not #{\p \s}]]
+                     :wordle/has-at-least {\l 1 \o 2}}]
+      (is (= (filterv
+               (partial matches-wordprint? wordprint)
+               ["blood" "loops" "frock" "aloof"])
+             ["blood" "aloof"])))))

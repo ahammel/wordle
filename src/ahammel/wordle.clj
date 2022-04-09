@@ -1,5 +1,19 @@
 (ns ahammel.wordle
+  (:require [clojure.string :as string])
   (:gen-class))
+
+(defn lowercase?
+  [s]
+  (= s (string/lower-case s)))
+
+(def dict
+  (->> "/usr/share/dict/words"
+       slurp
+       string/split-lines
+       (filter lowercase?)
+       (filter #(= (count %) 5))))
+
+(comment (count dict))
 
 (defn guess-word
   [answer guess]
@@ -68,6 +82,40 @@
       (merge-with max
                   has-at-least
                   (guess-result->has-at-least guess-result))})))
+
+(defn ^:private position-matches?
+  [letter [tag value]]
+  (case tag
+    :wordle/is (= letter value)
+    :wordle/is-not (not (value letter))))
+
+(defn ^:private has-at-least-matches?
+  [word [letter n]]
+  (>=
+    (count-where #(= letter %) word)
+    n))
+
+(defn matches-wordprint?
+  [{:wordle/keys [positions has-at-least]} word]
+  (let [positions-match?
+        (every?
+          true?
+          (map position-matches? word positions))
+
+        has-at-least-match?
+        (every?
+          true?
+          (map (partial has-at-least-matches? word) has-at-least))]
+    (and positions-match? has-at-least-match?)))
+
+(comment
+  (let [wordprint (guess-result->wordprint (guess-word "blood" "loops"))]
+    (->> dict
+         shuffle
+         (filterv #(matches-wordprint? wordprint %))))
+
+  (let [wordprint (guess-result->wordprint (guess-word "blood" "loops"))]
+    (matches-wordprint? wordprint "frock")))
 
 (defn -main
   "I don't do a whole lot ... yet."
