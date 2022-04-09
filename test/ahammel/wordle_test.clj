@@ -67,8 +67,7 @@
          (= result
             (let [first-result  (guess-word (:answer args) (:first-guess args))
                   second-result (guess-word (:answer args) (:second-guess args))]
-              (-> (guess-result->wordprint first-result)
-                  (guess-result->wordprint second-result))))
+              (guess-result->wordprint first-result second-result)))
 
          {:answer "foray" :first-guess "adieu" :second-guess "boats"}
          {:wordle/positions    [[:wordle/is-not #{\a \d \i \e \u \b \t \s}]
