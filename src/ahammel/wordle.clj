@@ -45,21 +45,19 @@
 
 (defn ^:private guess-result->has-at-least
   [guess-result]
-  (let [letters (map second guess-result)]
-    (->> guess-result
-         (filter (fn [[tag _]] (not= tag :wordle/o)))
-         (map (fn [[_ char]] [char
-                              (count-where (fn [[tag letter]]
-                                             (and (not= :wordle/o tag)
-                                                  (= char letter)))
-                                           guess-result)]))
-         (into {}))))
+  (->> guess-result
+       (filter (fn [[tag _]] (not= tag :wordle/o)))
+       (map (fn [[_ char]] [char
+                            (count-where (fn [[tag letter]]
+                                           (and (not= :wordle/o tag)
+                                                (= char letter)))
+                                         guess-result)]))
+       (into {})))
 
 (defn guess-result->wordprint
   ([result & results]
    (let [->wordprint
-           (fn [{:wordle/keys [positions has-at-least], :as wordprint}
-                guess-result]
+           (fn [{:wordle/keys [positions has-at-least]} guess-result]
              (let [wrong-pos (->> guess-result
                                   (filter (fn [[tag _]] (= tag :wordle/-)))
                                   (map second)
@@ -164,9 +162,6 @@
        (->> (map doubles-score word)
             (reduce +)))))
 
-(comment
-  (float (least-squares-score "soree" dict)))
-
 (defn solve
   [word dict]
   (loop [*dict dict
@@ -205,7 +200,7 @@
   (->> filtered-dict
        (filter (fn [word] (has-at-least-matches? word [\i 2])))
        (take 20))
-  (let [guesses [["sonar" "+oo-o"] ["stale" "+o-+o"] ["sally" "++o++"]]
+  (let [guesses [["seral" "oooo-"] ["boily" "o-o-o"] ["clout" "-++oo"]]
         wordprint (if (empty? guesses)
                     (empty-wordprint n)
                     (->> guesses
@@ -215,19 +210,20 @@
         dictionary (filter #(matches-wordprint? wordprint %) filtered-dict)
         position-frequency-table (dict->position-frequency-table dictionary)
         singles-frequency-table (dict->multiples-frequency-table 1 dictionary)
-        doubles-frequency-table (dict->multiples-frequency-table 2 dictionary)]
-    {:wordprint wordprint,
-     :search-space (count dictionary),
-     :guesses (->> dictionary
-                   (map (fn [word]
-                          {:word word,
-                           :least-squares-score (float
-                                                  (least-squares-score
-                                                    word
-                                                    position-frequency-table
-                                                    singles-frequency-table
-                                                    doubles-frequency-table))}))
-                   (sort-by :least-squares-score)
-                   (take 10))}))
+        doubles-frequency-table (dict->multiples-frequency-table 2 dictionary)
+        guesses (->> dictionary
+                     (map (fn [word]
+                            {:word word,
+                             :least-squares-score
+                               (float (least-squares-score
+                                        word
+                                        position-frequency-table
+                                        singles-frequency-table
+                                        doubles-frequency-table))}))
+                     (sort-by :least-squares-score)
+                     (take 10))]
+    (clojure.pprint/pprint {:wordprint wordprint,
+                            :search-space (count dictionary),
+                            :guesses guesses})))
 
 (defn -main "I don't do a whole lot ... yet." [& args] (println "hi"))
